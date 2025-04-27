@@ -2,11 +2,29 @@
 using namespace std;
 
 Optional<Set<int>> makeTarget(const Set<int>& elems, int target) {
-    /* TODO: Delete this comment and the next few lines, then implement this
-     * function.
-     */
-    (void) elems;
-    (void) target;
+    if (target == 0) {
+        return {};
+    }
+
+    if (elems.isEmpty()) {
+        return Nothing;
+    }
+
+    int elem = elems.first();
+    Set<int> rest = elems;
+    rest.remove(elem);
+
+    Optional<Set<int>> with = makeTarget(rest, target - elem);
+    if (with != Nothing) {
+        with.value().add(elem);
+        return with;
+    }
+
+    Optional<Set<int>> without = makeTarget(rest, target);
+    if (without != Nothing) {
+        return without;
+    }
+
     return Nothing;
 }
 
