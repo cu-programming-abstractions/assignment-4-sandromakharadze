@@ -2,22 +2,100 @@
 using namespace std;
 
 int numSchedulesFor(const Set<Shift>& shifts, int maxHours) {
-    /* TODO: Delete this comment and the lines below it, then implement
-     * this function.
-     */
-    (void) shifts;
-    (void) maxHours;
-    return -1;
+    if (maxHours < 0) {
+        error("maxHours cannot be negative");
+    }
+
+    Vector<Shift> shiftList;
+    for (const Shift& shift : shifts) {
+        shiftList.add(shift);
+    }
+
+    int totalCount = 0;
+
+    function<void(int, int, Vector<Shift>&)> recurse = [&](int index, int hoursSoFar, Vector<Shift>& currentSchedule) {
+        if (index == shiftList.size()) {
+            totalCount += 1;
+            return;
+        }
+
+        recurse(index + 1, hoursSoFar, currentSchedule);
+
+        Shift current = shiftList[index];
+        int shiftLength = lengthOf(current);
+
+        if (hoursSoFar + shiftLength <= maxHours) {
+            bool overlaps = false;
+            for (const Shift& taken : currentSchedule) {
+                if (overlapsWith(current, taken)) {
+                    overlaps = true;
+                    break;
+                }
+            }
+
+            if (!overlaps) {
+                currentSchedule.add(current);
+                recurse(index + 1, hoursSoFar + shiftLength, currentSchedule);
+                currentSchedule.remove(currentSchedule.size() - 1); // backtrack
+            }
+        }
+    };
+
+    Vector<Shift> currentSchedule;
+    recurse(0, 0, currentSchedule);
+    return totalCount;
 }
 
 Set<Shift> maxProfitSchedule(const Set<Shift>& shifts, int maxHours) {
-    /* TODO: Delete this comment and the lines below it, then implement
-     * this function.
-     */
-    (void) shifts;
-    (void) maxHours;
-    return {};
+    if (maxHours < 0) {
+        error("maxHours cannot be negative");
+    }
+
+    Vector<Shift> shiftList;
+    for (const Shift& shift : shifts) {
+        shiftList.add(shift);
+    }
+
+    Set<Shift> bestSchedule;
+    int bestProfit = 0;
+
+    function<void(int, int, int, Set<Shift>&)> recurse = [&](int index, int hoursSoFar, int profitSoFar, Set<Shift>& currentSchedule) {
+        if (index == shiftList.size()) {
+            if (profitSoFar > bestProfit) {
+                bestProfit = profitSoFar;
+                bestSchedule = currentSchedule;
+            }
+            return;
+        }
+
+        recurse(index + 1, hoursSoFar, profitSoFar, currentSchedule);
+
+        Shift current = shiftList[index];
+        int duration = lengthOf(current);
+        int profit = profitFor(current);
+
+        if (hoursSoFar + duration <= maxHours) {
+            bool overlaps = false;
+            for (const Shift& s : currentSchedule) {
+                if (overlapsWith(current, s)) {
+                    overlaps = true;
+                    break;
+                }
+            }
+
+            if (!overlaps) {
+                currentSchedule.add(current);
+                recurse(index + 1, hoursSoFar + duration, profitSoFar + profit, currentSchedule);
+                currentSchedule.remove(current);
+            }
+        }
+    };
+
+    Set<Shift> currentSchedule;
+    recurse(0, 0, 0, currentSchedule);
+    return bestSchedule;
 }
+
 
 
 
